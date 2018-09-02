@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Who is it?</h1>
+<p>Listen...</p>
+<ul class="knock-list"></ul>
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script>
+$(document).ready(function(){
+    var source = new EventSource("{{ url_for('sse.stream') }}");
+    source.addEventListener('knock', function(event) {
+        var data = JSON.parse(event.data);
+        console.log(data.username + 'is knocking on the door...')
+        $('.knock-list').before('<li>' + data.username + 'is knocking on the door...</li>')
+    }, false);
+    source.addEventListener('error', function(event) {
+        alert("Failed to connect server, please try again later.");
+    }, false);
+    });
+  </script>
+{% endblock %}
