@@ -7,14 +7,14 @@
     :copyright: © 2018 Grey Li
     :license: MIT, see LICENSE for more details.
 """
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, session
 from flask_sse import sse
-from gevent.pywsgi import WSGIServer
 from faker import Faker
 
 fake = Faker()
 
 app = Flask(__name__)
+app.secret_key = 'dev key'
 app.config['REDIS_URL'] = 'redis://localhost'
 
 app.register_blueprint(sse, url_prefix='/stream')
@@ -22,6 +22,13 @@ app.register_blueprint(sse, url_prefix='/stream')
 
 @app.route('/')
 def index():
+    username = fake.name()
+    session['username'] = username
+    return render_template('index.html', username=username)
+
+
+@app.route('/lobby')
+def lobby():
     return render_template('lobby.html')
 
 
@@ -30,15 +37,18 @@ def darkroom():
     return render_template('darkroom.html')
 
 
-@app.route('/knock', methods=['GET', 'POST'])
+@app.route('/knock')
 def knock():
-    if request.method == 'POST':
-        username = request.form.get('username', 'Someone')
-        sse.publish({'username': username}, type='knock')
-        return redirect(url_for('knock'))
+    username = session.get('username', 'Someone')
+    sse.publish({'username': username}, type='knock')
+    return '', 204
 
-    username = fake.name()
-    return render_template('knock.html', username=username)
+
+@app.route('/sing')
+def sing():
+    username = session.get('username', 'Someone')
+    sse.publish({'username': username}, type='sing')
+    return '', 204
 
 
 @app.route('/hello/<username>')
@@ -51,6 +61,3 @@ def hello(username):
 def user(username):
     return render_template('user.html', username=username)
 
-
-http_server = WSGIServer(('', 5000), app)
-http_server.serve_forever()

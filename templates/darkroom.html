@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Lobby</h1>
+<h1>Dark Room</h1>
 <p>Listen...</p>
-<ul class="knock-list"></ul>
+<ul class="sing-list"></ul>
 {% endblock %}
 
 {% block scripts %}
@@ -11,9 +11,9 @@
 <script>
 $(document).ready(function(){
     var source = new EventSource("{{ url_for('sse.stream') }}");
-    source.addEventListener('knock', function(event) {
+    source.addEventListener('sing', function(event) {
         var data = JSON.parse(event.data);
-        $('.knock-list').before('<li><strong>' + data.username + '</strong> is knocking on the door...</li>')
+        $('.sing-list').before('<li><strong>' + data.username + '</strong> is sing...</li>')
     }, false);
     source.addEventListener('error', function(event) {
         alert('Failed to connect server, please try again later.');
